@@ -4,6 +4,12 @@ class cacti (
     $standalone         = 'false',
     $auth_basic         = 'false',
     $auth_basic_group   = 'NONE',
+    $db_name            = 'cacti',
+    $db_host            = 'localhost',
+    $db_user            = 'cacti',
+    $db_pass            = 'password',
+    $db_port            = '3306',
+    $db_use_ssl         = 'false',
 ) {
 
     $standalone_type = type($standalone)
