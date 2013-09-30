@@ -76,7 +76,7 @@ class cacti (
         ensure => present,
         content => template('cacti/apache.conf.erb'),
         require => Package['cacti_pkg'],
-        notify => Service['apache'],
+        notify => Service['httpd'],
     }
 
 }
