@@ -19,7 +19,7 @@ class cacti (
         $run_standalone = $standalone
     }
     if $run_standalone == true {
-        require 'apache'
+        include 'apache'
     }
     
     $auth_basic_type = type($auth_basic)
@@ -47,7 +47,6 @@ class cacti (
     package { "cacti_pkg" :
         name => $pkg_name,
         ensure => installed,
-        install_options => norecommended,
         require => Class['apache']
     }
 
