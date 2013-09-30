@@ -2,18 +2,31 @@
 
 class cacti (
     $standalone         = 'false',
-    $mysql_server       = 'localhost',
+    $auth_basic         = 'false',
+    $auth_basic_group   = 'NONE',
 ) {
 
     $standalone_type = type($standalone)
-    if $standalone_type == "string {
+    if $standalone_type == "string" {
         $run_standalone = str2bool($standalone)
     }else{
         $run_standalone = $standalone
     }
     if $run_standalone == true {
         require 'apache'
-        require 'mysql'
+    }
+    
+    $auth_basic_type = type($auth_basic)
+    if $auth_basic_type == "string" {
+        $use_auth_basic = str2bool($auth_basic)
+    }else{
+        $use_auth_basic = $auth_basic
+    }
+    if $use_auth_basic == true {
+        $auth_pkgs = ['libapache2-mod-authnz-external', 'pwauth', 'libapache2-mod-authz-unixgroup']
+        package {$auth_pkgs :
+            ensure => installed,
+        }
     }
 
     case $::operatingsystem {
@@ -30,6 +43,32 @@ class cacti (
         ensure => installed,
         options => norecommended,
         require => Class['apache']
+    }
+
+    file {'/usr/share/cacti/site/include/conf.d/' :
+        ensure = directory,
+    }
+
+    file {'/usr/share/cacti/site/include/conf.d/database.php' :
+        ensure => present,
+        content => template('cacti/database.php.erb'),
+        require => File['/usr/share/cacti/site/include/conf.d/'],
+    }
+
+    file {'/usr/share/cacti/site/include/config.php' : 
+        ensure => present,
+        content => template("cacti/config.php.erb"),
+    }
+
+    file {'/etc/apache2/conf.d/cacti' :
+        ensure => link,
+        target => '/etc/cacti/apache.conf',
+        require => File['/etc/cacti/apache.conf'],
+    }
+
+    file {'/etc/cacti/apache.conf' :
+        ensure => present,
+        content => template('cacti/apache.conf.erb'),
     }
 
 }
