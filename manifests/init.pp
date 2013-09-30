@@ -47,12 +47,12 @@ class cacti (
     package { "cacti_pkg" :
         name => $pkg_name,
         ensure => installed,
-        options => norecommended,
+        install_options => norecommended,
         require => Class['apache']
     }
 
     file {'/usr/share/cacti/site/include/conf.d/' :
-        ensure = directory,
+        ensure => directory,
     }
 
     file {'/usr/share/cacti/site/include/conf.d/database.php' :
@@ -66,7 +66,7 @@ class cacti (
         content => template("cacti/config.php.erb"),
     }
 
-    file {'/etc/apache2/conf.d/cacti' :
+    file {'/etc/apache2/conf.d/cacti.conf' :
         ensure => link,
         target => '/etc/cacti/apache.conf',
         require => File['/etc/cacti/apache.conf'],
@@ -75,6 +75,8 @@ class cacti (
     file {'/etc/cacti/apache.conf' :
         ensure => present,
         content => template('cacti/apache.conf.erb'),
+        require => Package['cacti_pkg'],
+        notify => Service['apache'],
     }
 
 }
