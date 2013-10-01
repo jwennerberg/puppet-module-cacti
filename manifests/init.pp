@@ -73,6 +73,12 @@ class cacti (
         require => File['/etc/cacti/'],
     }
 
+    file {'/etc/cacti/debian.php' :
+        ensure => present,
+        content => template('cacti/debian.php.erb'),
+        require => File['/etc/cacti/'],
+    }
+
     file {'/usr/src/cactiInstall.sql' :
         ensure => present,
         source => "puppet:///modules/cacti/cactiInstall.sql",
