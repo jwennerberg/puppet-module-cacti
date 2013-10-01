@@ -2,10 +2,12 @@
 
 Alias /cacti /usr/share/cacti/site
 
-<% if @use_auth_basic == 'true' -%>
+<% if @use_auth_basic -%>
 <IfModule mod_authnz_external.c>
 AddExternalAuth pwauth /usr/sbin/pwauth
 SetExternalAuthMethod pwauth pipe
+AddExternalGroup unixgroup /usr/sbin/unixgroup
+SetExternalGroupMethod unixgroup environment
 </IfModule>
 
 <% end -%>
@@ -14,10 +16,11 @@ SetExternalAuthMethod pwauth pipe
     AllowOverride None
     order allow,deny
     allow from all
-    <% if @use_auth_basic == 'true' -%>
+    <% if @use_auth_basic -%>
     AuthType Basic
     AuthName "Restricted Area"
     AuthBasicProvider external
+    GroupExternal unixgroup
     AuthExternal pwauth
     <% if @auth_basic_group != 'NONE' -%>
     Require group <%= @auth_basic_group -%>

@@ -54,7 +54,7 @@ class cacti (
     package { "cacti_pkg" :
         name => $pkg_name,
         ensure => installed,
-        require => [ Class['apache'], Exec['populate-db'] ],
+        require => [ Class['apache'] ],
     }
 
     file {'/usr/share/cacti/site/include/config.php' : 
@@ -99,11 +99,19 @@ class cacti (
     file {'/usr/share/cacti' :
         ensure => directory,
     }
+    
+    file {'/usr/sbin/unixgroup' :
+        ensure => present,
+        content => template('cacti/unixgroup.erb'),
+        mode => '0777',
+        owner => 'root',
+        group => 'root',
+    }
 
     exec {'populate-db' :
         command => "/usr/bin/mysql -p${db_pass} -u${db_user} -h ${db_host} -P ${db_port} ${db_name} < /usr/src/cactiInstall.sql; /usr/bin/mysql -p${db_pass} -u${db_user} -h ${db_host} -P ${db_port} ${db_name} < /usr/src/cactiSettings.sql && touch /usr/share/cacti/.dbInstalled",
         creates => "/usr/share/cacti/.dbInstalled",
-        require => [ File['/usr/src/cactiInstall.sql'], File['/usr/src/cactiSettings.sql'], File['/usr/share/cacti'] ],
+        require => [ File['/usr/src/cactiInstall.sql'], File['/usr/src/cactiSettings.sql'], File['/usr/share/cacti'], Package['cacti_pkg'] ],
     }
 
 }
