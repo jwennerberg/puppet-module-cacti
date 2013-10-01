@@ -47,18 +47,7 @@ class cacti (
     package { "cacti_pkg" :
         name => $pkg_name,
         ensure => installed,
-        require => Class['apache']
-    }
-
-    file {'/usr/share/cacti/site/include/conf.d/' :
-        ensure => directory,
-        require => Package['cacti_pkg'], 
-    }
-
-    file {'/usr/share/cacti/site/include/conf.d/database.php' :
-        ensure => present,
-        content => template('cacti/database.php.erb'),
-        require => File['/usr/share/cacti/site/include/conf.d/'],
+        require => [ Class['apache'], Exec['populate-db'] ],
     }
 
     file {'/usr/share/cacti/site/include/config.php' : 
@@ -82,6 +71,21 @@ class cacti (
         content => template('cacti/apache.conf.erb'),
         notify => Service['httpd'],
         require => File['/etc/cacti/'],
+    }
+
+    file {'/usr/src/cactiInstall.sql' :
+        ensure => present,
+        source => "puppet:///modules/cacti/cactiInstall.sql",
+    }
+
+    file {'/usr/share/cacti' :
+        ensure => directory,
+    }
+
+    exec {'populate-db' :
+        command => "/usr/bin/mysql -p${db_pass} -u${db_user} -h ${db_host} -P ${db_port} ${db_name} < /usr/src/cactiInstall.sql && touch /usr/share/cacti/.dbInstalled",
+        creates => "/usr/share/cacti/.dbInstalled",
+        require => File['/usr/share/cacti'],
     }
 
 }
