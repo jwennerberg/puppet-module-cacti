@@ -29,9 +29,16 @@ class cacti (
         $use_auth_basic = $auth_basic
     }
     if $use_auth_basic == true {
-        $auth_pkgs = ['libapache2-mod-authnz-external', 'pwauth', 'libapache2-mod-authz-unixgroup']
-        package {$auth_pkgs :
-            ensure => installed,
+        #$auth_pkgs = ['libapache2-mod-authnz-external', 'pwauth', 'libapache2-mod-authz-unixgroup']
+        #package {$auth_pkgs :
+        #    ensure => installed,
+        #}
+
+        apache::mod { 'authnz_external' :
+            package => 'libapache2-mod-authnz-external',
+        }
+        apache::mod { 'authz_unixgroup' :
+            package => 'libapache2-mod-authz-unixgroup',
         }
     }
 
