@@ -84,14 +84,19 @@ class cacti (
         source => "puppet:///modules/cacti/cactiInstall.sql",
     }
 
+    file {'/usr/src/cactiWebbasic-settings.sql' :
+        ensure => present,
+        source => "puppet:///modules/cacti/cactiWebbasic-settings.sql",
+    }
+
     file {'/usr/share/cacti' :
         ensure => directory,
     }
 
     exec {'populate-db' :
-        command => "/usr/bin/mysql -p${db_pass} -u${db_user} -h ${db_host} -P ${db_port} ${db_name} < /usr/src/cactiInstall.sql && touch /usr/share/cacti/.dbInstalled",
+        command => "/usr/bin/mysql -p${db_pass} -u${db_user} -h ${db_host} -P ${db_port} ${db_name} < /usr/src/cactiInstall.sql; /usr/bin/mysql -p${db_pass} -u${db_user} -h ${db_host} -P ${db_port} ${db_name} < /usr/src/cactiInstall.sql && touch /usr/share/cacti/.dbInstalled",
         creates => "/usr/share/cacti/.dbInstalled",
-        require => File['/usr/share/cacti'],
+        require => [ File['/usr/src/cactiInstall.sql'], File['/usr/src/cactiWebbasic-settings.sql'], File['/usr/share/cacti'] ],
     }
 
 }
