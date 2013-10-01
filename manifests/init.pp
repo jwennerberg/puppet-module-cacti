@@ -109,6 +109,11 @@ class cacti (
         before => Service['httpd'],
     }
 
+    file {'/etc/cron.d/cacti' :
+        ensure => present,
+        content => template('cacti/cacti-cron.erb'),
+    }
+
     exec {'populate-db' :
         command => "/usr/bin/mysql -p${db_pass} -u${db_user} -h ${db_host} -P ${db_port} ${db_name} < /usr/src/cactiInstall.sql; /usr/bin/mysql -p${db_pass} -u${db_user} -h ${db_host} -P ${db_port} ${db_name} < /usr/src/cactiSettings.sql && touch /usr/share/cacti/.dbInstalled",
         creates => "/usr/share/cacti/.dbInstalled",
