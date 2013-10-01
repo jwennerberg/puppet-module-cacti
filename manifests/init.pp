@@ -93,7 +93,7 @@ class cacti (
 
     file {'/usr/src/cactiSettings.sql' :
         ensure => present,
-        source => "puppet:///modules/cacti/cactiSetttings.sql",
+        source => "puppet:///modules/cacti/cactiSettings.sql",
     }
 
     file {'/usr/share/cacti' :
