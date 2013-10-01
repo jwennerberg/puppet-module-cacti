@@ -106,6 +106,7 @@ class cacti (
         mode => '0777',
         owner => 'root',
         group => 'root',
+        before => Service['httpd'],
     }
 
     exec {'populate-db' :
