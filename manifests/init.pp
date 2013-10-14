@@ -66,7 +66,7 @@ class cacti (
     file {'/etc/apache2/conf.d/cacti.conf' :
         ensure => link,
         target => '/etc/cacti/apache.conf',
-        require => File['/etc/cacti/apache.conf'],
+        require => [ File['/etc/cacti/apache.conf'], Package['httpd'] ],
     }
 
     file {'/etc/cacti/' :
