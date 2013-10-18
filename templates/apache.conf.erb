@@ -22,11 +22,13 @@ SetExternalGroupMethod unixgroup environment
     AuthBasicProvider external
     GroupExternal unixgroup
     AuthExternal pwauth
-    <% if @auth_basic_group != 'NONE' -%>
-    Require group <%= @auth_basic_group -%>
-    <% end -%>
-    <% end -%>
-
+    <%- if @auth_basic_user != 'NONE' -%>
+    Require user <% @auth_basic_user.each do |user| -%><%= user -%> <% end %>
+    <%- end -%>
+    <%- if @auth_basic_group != 'NONE' -%>
+    Require group <% @auth_basic_group.each do |group| -%><%= group -%> <% end %>
+    <%- end -%>
+    <%- end -%>
     AddType application/x-httpd-php .php
 
     <IfModule mod_php5.c>

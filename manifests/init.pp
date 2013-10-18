@@ -4,6 +4,7 @@ class cacti (
     $standalone         = 'false',
     $auth_basic         = 'false',
     $auth_basic_group   = 'NONE',
+    $auth_basic_user    = 'NONE',
     $db_name            = 'cacti',
     $db_host            = 'localhost',
     $db_user            = 'cacti',
