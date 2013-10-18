@@ -22,6 +22,8 @@ SetExternalGroupMethod unixgroup environment
     AuthBasicProvider external
     GroupExternal unixgroup
     AuthExternal pwauth
+    AuthBasicAuthoritative off
+    GroupExternalAuthoritative off
     <%- if @auth_basic_user != 'NONE' -%>
     Require user <% @auth_basic_user.each do |user| -%><%= user -%> <% end %>
     <%- end -%>
