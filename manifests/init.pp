@@ -30,7 +30,7 @@ class cacti (
   case $::osfamily {
     'RedHat': {
       $httpd_config_template = 'cacti/httpd_cacti.conf.erb'
-      $default_packages = ['cacti','net-snmp-utils']
+      $default_packages = ['cacti','net-snmp-utils','php-gd']
       $default_cacti_user = 'cacti'
       $default_db_config_path = '/etc/cacti/db.php'
       $default_db_config_owner = 'cacti'
