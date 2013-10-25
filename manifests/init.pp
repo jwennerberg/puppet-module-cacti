@@ -107,7 +107,8 @@ class cacti (
     owner   => $httpd_config_owner,
     group   => $httpd_config_group,
     content => template($httpd_config_template),
-    require => Class['apache'],
+    require => File['cacti_base'],
+    notify  => Service['httpd'],
   }
 
   file { 'cacti_base':
@@ -154,6 +155,5 @@ class cacti (
     command => "mysql -p${db_pass} -u${db_user} -h ${db_host} -P ${db_port} ${db_name} < ${cacti_base_path}/cacti.sql && touch ${cacti_base_path}/.dbInstalled",
     creates => "${cacti_base_path}/.dbInstalled",
     require => File['db_init_file'],
-    notify  => Service['httpd'],
   }
 }
