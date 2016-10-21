@@ -85,9 +85,8 @@ class cacti (
     $my_poller_cron_command = $poller_cron_command
   }
 
-  package { 'cacti_pkg':
-    ensure  => installed,
-    name    => $my_packages,
+  package { $my_packages:
+    ensure => installed,
   }
 
   file { 'db_config':
@@ -97,7 +96,7 @@ class cacti (
     owner   => $my_db_config_owner,
     group   => $my_db_config_group,
     content => template('cacti/db.php.erb'),
-    require => Package['cacti_pkg'],
+    require => Package[$my_packages],
   }
 
   file { 'httpd_cacti_config':
@@ -117,7 +116,7 @@ class cacti (
     mode    => $cacti_base_mode,
     owner   => $cacti_base_owner,
     group   => $cacti_base_group,
-    require => Package['cacti_pkg'],
+    require => Package[$my_packages],
   }
 
   file { 'db_init_file':
@@ -133,13 +132,13 @@ class cacti (
   file { 'crond_cacti':
     ensure  => absent,
     path    => '/etc/cron.d/cacti',
-    require => Package['cacti_pkg'],
+    require => Package[$my_packages],
   }
 
   user { 'cacti_user':
     ensure  => present,
     name    => $my_cacti_user,
-    require => Package['cacti_pkg'],
+    require => Package[$my_packages],
   }
 
   cron { 'cacti_poller':
