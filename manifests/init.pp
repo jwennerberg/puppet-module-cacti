@@ -1,124 +1,159 @@
 ### Puppet module to manage cacti
 
 class cacti (
-    $standalone         = 'false',
-    $auth_basic         = 'false',
-    $auth_basic_group   = 'NONE',
-    $auth_basic_user    = 'NONE',
-    $db_name            = 'cacti',
-    $db_host            = 'localhost',
-    $db_user            = 'cacti',
-    $db_pass            = 'password',
-    $db_port            = '3306',
-    $db_use_ssl         = 'false',
+  $cacti_base_path     = '/usr/share/cacti',
+  $cacti_base_mode     = '0755',
+  $cacti_base_owner    = 'root',
+  $cacti_base_group    = 'root',
+  $cacti_user          = 'USE_DEFAULT',
+  $db_config_path      = 'USE_DEFAULT',
+  $db_config_mode      = '0644',
+  $db_config_owner     = 'USE_DEFAULT',
+  $db_config_group     = 'USE_DEFAULT',
+  $db_name             = 'cacti',
+  $db_host             = 'localhost',
+  $db_user             = 'cacti',
+  $db_pass             = 'password',
+  $db_port             = '3306',
+  $db_use_ssl          = false,
+  $httpd_config_path   = 'USE_DEFAULT',
+  $httpd_config_mode   = '0644',
+  $httpd_config_owner  = 'root',
+  $httpd_config_group  = 'root',
+  $packages            = 'USE_DEFAULT',
+  $poller_cron_command = 'USE_DEFAULT',
+  $poller_cron_minute  = '*/5',
 ) {
 
-    $standalone_type = type($standalone)
-    if $standalone_type == "string" {
-        $run_standalone = str2bool($standalone)
-    }else{
-        $run_standalone = $standalone
-    }
-    if $run_standalone == true {
-        include 'apache'
-    }
-    
-    $auth_basic_type = type($auth_basic)
-    if $auth_basic_type == "string" {
-        $use_auth_basic = str2bool($auth_basic)
-    }else{
-        $use_auth_basic = $auth_basic
-    }
-    if $use_auth_basic == true {
-        #$auth_pkgs = ['libapache2-mod-authnz-external', 'pwauth', 'libapache2-mod-authz-unixgroup']
-        #package {$auth_pkgs :
-        #    ensure => installed,
-        #}
+  include apache
 
-        apache::mod { 'authnz_external' :
-            package => 'libapache2-mod-authnz-external',
-        }
-        apache::mod { 'authz_unixgroup' :
-            package => 'libapache2-mod-authz-unixgroup',
-        }
+  case $::osfamily {
+    'RedHat': {
+      $httpd_config_template = 'cacti/httpd_cacti.conf.erb'
+      $default_packages = ['cacti','net-snmp-utils','php-gd']
+      $default_cacti_user = 'cacti'
+      $default_db_config_path = '/etc/cacti/db.php'
+      $default_db_config_owner = 'cacti'
+      $default_db_config_group = 'apache'
+      $default_httpd_config_path = '/etc/httpd/conf.d/cacti.conf'
+      $default_poller_cron_command = '/usr/bin/php /usr/share/cacti/poller.php > /dev/null 2>&1'
     }
+    default: {
+      fail("Module cacti is supported on osfamily RedHat. Your osfamily identified as ${::osfamily}")
+    }
+  }
 
-    case $::operatingsystem {
-        /^(Debian|Ubuntu)$/: {
-            $pkg_name = "cacti"
-        }
-        default: {
-            fail("Unsupported operating system ${::operatingsystem}")
-        }
-    }
+  if $packages == 'USE_DEFAULT' {
+    $my_packages = $default_packages
+  } else {
+    $my_packages = $packages
+  }
 
-    package { "cacti_pkg" :
-        name => $pkg_name,
-        ensure => installed,
-        require => [ Class['apache'] ],
-    }
+  if $cacti_user == 'USE_DEFAULT' {
+    $my_cacti_user = $default_cacti_user
+  } else {
+    $my_cacti_user = $cacti_user
+  }
 
-    file {'/usr/share/cacti/site/include/config.php' : 
-        ensure => present,
-        content => template("cacti/config.php.erb"),
-        require => Package['cacti_pkg'],
-    }
+  if $db_config_path == 'USE_DEFAULT' {
+    $my_db_config_path = $default_db_config_path
+  } else {
+    $my_db_config_path = $db_config_path
+  }
 
-    file {'/etc/apache2/conf.d/cacti.conf' :
-        ensure => link,
-        target => '/etc/cacti/apache.conf',
-        require => [ File['/etc/cacti/apache.conf'], Package['httpd'] ],
-    }
+  if $db_config_path == 'USE_DEFAULT' {
+    $my_db_config_owner = $default_db_config_owner
+  } else {
+    $my_db_config_owner = $db_config_owner
+  }
 
-    file {'/etc/cacti/' :
-        ensure => directory,
-    }
+  if $db_config_path == 'USE_DEFAULT' {
+    $my_db_config_group = $default_db_config_group
+  } else {
+    $my_db_config_group = $db_config_group
+  }
 
-    file {'/etc/cacti/apache.conf' :
-        ensure => present,
-        content => template('cacti/apache.conf.erb'),
-        notify => Service['httpd'],
-        require => File['/etc/cacti/'],
-    }
+  if $httpd_config_path == 'USE_DEFAULT' {
+    $my_httpd_config_path = $default_httpd_config_path
+  } else {
+    $my_httpd_config_path = $httpd_config_path
+  }
 
-    file {'/etc/cacti/debian.php' :
-        ensure => present,
-        content => template('cacti/debian.php.erb'),
-        require => File['/etc/cacti/'],
-    }
+  if $poller_cron_command == 'USE_DEFAULT' {
+    $my_poller_cron_command = $default_poller_cron_command
+  } else {
+    $my_poller_cron_command = $poller_cron_command
+  }
 
-    file {'/usr/src/cactiInstall.sql' :
-        ensure => present,
-        source => "puppet:///modules/cacti/cactiInstall.sql",
-    }
+  package { 'cacti_pkg':
+    ensure  => installed,
+    name    => $my_packages,
+  }
 
-    file {'/usr/src/cactiSettings.sql' :
-        ensure => present,
-        source => "puppet:///modules/cacti/cactiSettings.sql",
-    }
+  file { 'db_config':
+    ensure  => present,
+    path    => $my_db_config_path,
+    mode    => $db_config_mode,
+    owner   => $my_db_config_owner,
+    group   => $my_db_config_group,
+    content => template('cacti/db.php.erb'),
+    require => Package['cacti_pkg'],
+  }
 
-    file {'/usr/share/cacti' :
-        ensure => directory,
-    }
-    
-    file {'/usr/sbin/unixgroup' :
-        ensure => present,
-        content => template('cacti/unixgroup.erb'),
-        mode => '0777',
-        owner => 'root',
-        group => 'root',
-        before => Service['httpd'],
-    }
+  file { 'httpd_cacti_config':
+    ensure  => present,
+    path    => $my_httpd_config_path,
+    mode    => $httpd_config_mode,
+    owner   => $httpd_config_owner,
+    group   => $httpd_config_group,
+    content => template($httpd_config_template),
+    require => File['cacti_base'],
+    notify  => Service['httpd'],
+  }
 
-    file {'/etc/cron.d/cacti' :
-        ensure => present,
-        content => template('cacti/cacti-cron.erb'),
-    }
+  file { 'cacti_base':
+    ensure  => directory,
+    path    => $cacti_base_path,
+    mode    => $cacti_base_mode,
+    owner   => $cacti_base_owner,
+    group   => $cacti_base_group,
+    require => Package['cacti_pkg'],
+  }
 
-    exec {'populate-db' :
-        command => "/usr/bin/mysql -p${db_pass} -u${db_user} -h ${db_host} -P ${db_port} ${db_name} < /usr/src/cactiInstall.sql; /usr/bin/mysql -p${db_pass} -u${db_user} -h ${db_host} -P ${db_port} ${db_name} < /usr/src/cactiSettings.sql && touch /usr/share/cacti/.dbInstalled",
-        creates => "/usr/share/cacti/.dbInstalled",
-        require => [ File['/usr/src/cactiInstall.sql'], File['/usr/src/cactiSettings.sql'], File['/usr/share/cacti'], Package['cacti_pkg'] ],
-    }
+  file { 'db_init_file':
+    ensure  => present,
+    path    => "${cacti_base_path}/cacti.sql",
+    mode    => '0644',
+    owner   => 'root',
+    group   => 'root',
+    source  => 'puppet:///modules/cacti/cacti.sql',
+    require => File['cacti_base'],
+  }
 
+  file { 'crond_cacti':
+    ensure  => absent,
+    path    => '/etc/cron.d/cacti',
+    require => Package['cacti_pkg'],
+  }
+
+  user { 'cacti_user':
+    ensure  => present,
+    name    => $my_cacti_user,
+    require => Package['cacti_pkg'],
+  }
+
+  cron { 'cacti_poller':
+    ensure  => present,
+    command => $my_poller_cron_command,
+    user    => $my_cacti_user,
+    minute  => $poller_cron_minute,
+    require => User['cacti_user'],
+  }
+
+  exec { 'db_init':
+    path    => '/bin:/usr/bin:/usr/local/bin',
+    command => "mysql -p${db_pass} -u${db_user} -h ${db_host} -P ${db_port} ${db_name} < ${cacti_base_path}/cacti.sql && touch ${cacti_base_path}/.dbInstalled",
+    creates => "${cacti_base_path}/.dbInstalled",
+    require => File['db_init_file'],
+  }
 }

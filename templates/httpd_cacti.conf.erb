@@ -1,0 +1,30 @@
+# This file is being maintained by Puppet.
+# DO NOT EDIT
+
+Alias /cacti /usr/share/cacti
+
+<Directory /usr/share/cacti/>
+  Options +FollowSymLinks
+  AllowOverride None
+  Order allow,deny
+  Allow from all
+</Directory>
+
+<Directory /usr/share/cacti/log>
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+  </IfModule>
+</Directory>
+<Directory /usr/share/cacti/rra>
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+  </IfModule>
+</Directory>
